@@ -2,7 +2,9 @@ use axum::{Json, Router, extract::Query, routing::get};
 
 use serde::{Deserialize, Serialize};
 use tower::ServiceBuilder;
+use tower_http::compression::CompressionLayer;
 use tower_http::cors::{Any, CorsLayer};
+
 #[derive(Debug, Deserialize)]
 struct Pagination {
     page: usize,
@@ -32,7 +34,7 @@ async fn list_things(Query(pagination): Query<Pagination>) -> Json<Vec<SomeData>
     Json(vec)
 }
 
-#[tokio::main(flavor = "current_thread")]
+#[tokio::main]
 async fn main() {
     let cors_layer = CorsLayer::new()
         .allow_origin(Any) // Open access to selected route
@@ -42,7 +44,15 @@ async fn main() {
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
         .route("/page", get(list_things))
-        .layer(ServiceBuilder::new().layer(cors_layer));
+        .layer(
+            ServiceBuilder::new().layer(cors_layer).layer(
+                CompressionLayer::new()
+                    .gzip(true)
+                    .br(true)
+                    .deflate(true)
+                    .zstd(true),
+            ),
+        );
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
