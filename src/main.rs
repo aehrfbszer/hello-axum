@@ -15,6 +15,7 @@ use tracing_subscriber;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
+mod common;
 #[derive(Debug, Deserialize)]
 struct Pagination {
     page: usize,
@@ -71,7 +72,7 @@ async fn main() {
         .allow_origin(Any)
         .allow_headers([AUTHORIZATION, CONTENT_TYPE]);
 
-    info!("Starting server on http:// ");
+    info!("Starting server on http:// some where");
     // build our application with a single route
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
