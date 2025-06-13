@@ -18,8 +18,9 @@ use super::error::AppError;
 pub static KEYS: LazyLock<Keys> = LazyLock::new(|| {
     dotenvy::dotenv().ok();
 
-    let secret = env::var("JWT_SECRET_KEY").expect("JWT_SECRET_KEY must be set");
-    Keys::new(secret.as_bytes())
+    let private_secret = env::var("JWT_PRIVATE_SECRET_KEY").expect("JWT_SECRET_KEY must be set");
+    let pub_secret = env::var("JWT_PUBLIC_SECRET_KEY").expect("JWT_SECRET_KEY must be set");
+    Keys::new(private_secret.as_bytes(), &pub_secret)
 });
 
 /// Keys is a struct that holds the encoding and decoding keys for JWT.
@@ -30,10 +31,10 @@ pub struct Keys {
 
 /// The Keys struct is used to create the encoding and decoding keys for JWT.
 impl Keys {
-    fn new(secret: &[u8]) -> Self {
+    fn new(private_str: &[u8], pub_str: &str) -> Self {
         Self {
-            encoding: EncodingKey::from_secret(secret),
-            decoding: DecodingKey::from_secret(secret),
+            encoding: EncodingKey::from_ed_der(private_str),
+            decoding: DecodingKey::from_ed_components(pub_str).unwrap(),
         }
     }
 }
